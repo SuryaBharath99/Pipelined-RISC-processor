@@ -1,0 +1,24 @@
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity isequal is
+port(
+A,B : in std_logic_vector(15 downto 0);
+en: in std_logic;
+eq: out std_logic)
+end entity;
+
+architecture equalarch or isequal is
+signal cheq: std_logic_vector(15 downto 0);
+begin
+process(A,B,en)
+begin
+cheq<= A nand B;
+if(en='1' and cheq=x"0000") then
+eq='1';
+else 
+eq='0';
+end if;
+end process;
+
+end equalarch;

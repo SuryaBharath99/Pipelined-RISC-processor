@@ -1,0 +1,22 @@
+library ieee;
+use ieee.std_logic_1164.all;
+ entity reg_n is 
+ generic (n : integer)
+ port (
+ Input: in std_logic_vector(n-1 downto 0);
+ Output: out std_logic_vector(n-1 downto 0);
+ en : in std_logic;
+ clock: in std_logic);
+ end entity;
+ 
+ 
+ architecture beh of reg_n is
+ 
+ begin
+aw : process( clock )
+begin
+	if(rising_edge(clock) and en='1') then
+      Output<=Input;
+      end if;
+end process ; -- a
+end architecture ; -- arch

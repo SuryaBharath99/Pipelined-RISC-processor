@@ -1,0 +1,307 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;        -- for addition & counting
+use ieee.numeric_std.all;               -- for type conversions
+use ieee.math_real.all;                 -- for the ceiling and log constant calculation functions
+
+entity hazard_detection is
+  port (
+	
+	I1,I2,I3 : in std_logic_vector(15 downto 0);
+    Ra3,Rb3,Rc1,Rc2 : in std_logic_vector(2 downto 0);    
+    Cin,Zin : in std_logic;
+    BEQ_flag1,BEQ_flag2 : in std_logic;
+    a,b,c,d,g,h,i,j,load_f,FL_C,LS_stall : out std_logic;
+    IF_ID_stall,PC_stall,ID_RR_stall : out std_logic
+    );
+end entity;
+
+architecture hazard_detection_arc of hazard_detection is
+  
+  	
+ begin
+process(Cin,Zin,BEQ_flag1,BEQ_flag2,I1,I2,I3,Ra3,Rb3,Rc1,Rc2)
+variable a_var,b_var,c_var,d_var,g_var,h_var,load_f_var,FL_C_var,IF_ID_stall_var,PC_stall_var,ID_RR_stall_var,LS_stall_var,i_var,j_var : std_logic;
+variable Op1,Op2,Op3 : std_logic_vector(3 downto 0);
+variable Opr2,Opr1 : std_logic_vector(1 downto 0);
+
+begin
+ a_var := '0';
+  b_var:= '0';
+  c_var:= '0';
+  d_var:= '0';
+  g_var:= '0';
+  h_var:= '0';
+  load_f_var:= '0';
+  FL_C_var:= '0';
+  IF_ID_stall_var:= '0';
+  PC_stall_var:= '0';
+  ID_RR_stall_var:= '0';
+  LS_stall_var := '0';
+  i_var := '0';
+  j_var := '0';
+
+  Op1 := I1(15 downto 12);
+  Opr1 := I1(1 downto 0);
+
+  Op2 := I2(15 downto 12);
+  Opr2 := I2(1 downto 0);
+  
+  Op3 := I3(15 downto 12);
+  
+  
+           
+  
+if (Op3 = "0001") then 
+		d_var := '1';
+
+elsif Op3 = "0100" then
+		d_var := '1';
+		b_var := '1';
+
+elsif Op3 = "0101" then
+     b_var := '1';
+     d_var := '1';
+else
+  a_var := '0';
+  b_var:= '0';
+  c_var:= '0';
+  d_var:= '0';
+end if;
+
+
+If (Op1 = "0100") then
+	load_f_var := '1';
+end if;
+
+
+
+
+-----------STALLING FOR LM AND SM
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--control hazards
+
+
+If(Op2="1000" or Op2="1001" or Op1="1001" or (Op2="1100" and BEQ_flag1='1') or (Op1="1100" and BEQ_flag2 ='1')) then
+	FL_C_var := '1';
+
+end if;	 
+
+
+
+
+
+
+--level1_hazard
+
+if(((Op2 ="0000" or Op2 = "0010") and ((Opr2 = "01" and Cin = '1') or (Opr2 = "10" and Zin = '1') )) or Op2 = "0001" or Op2 = "0011" or Op2 = "1000" or Op2 ="1001") then
+	if(Op3 = "0000" and Ra3 = Rc2 ) then 
+        a_var := '1';
+        b_var := '1';
+    elsif (Op3 = "0000" and Rb3 = Rc2 ) then
+    	c_var := '1';
+    	d_var := '1';
+    elsif (Op3 = "0010" and Ra3 = Rc2) then
+    	a_var := '1';
+        b_var := '1';
+    elsif (Op3 = "0010" and Rb3 = Rc2) then
+    	c_var := '1';
+    	d_var := '1';
+     elsif (Op3 = "0100" and Rb3 = Rc2) then
+        	a_var := '1';
+        b_var := '1';
+        d_var := '1';
+     elsif (Op3 = "0101" and Ra3 = Rc2) then
+     	h_var := '1'; 
+     elsif (Op3 = "0101" and Rb3 = Rc2) then
+         a_var := '1';
+         b_var := '1';
+    elsif (Op3 = "1100" and Ra3 = Rc2) then
+          a_var := '1';
+          b_var := '1';   	   	    	       	   	    	       	   	    	       	   	    	        	   	    	       	   	    	       	   	    	       	   	    
+    elsif (Op3 = "1100" and Rb3 = Rc2) then
+			c_var := '1';
+			d_var := '1';
+	elsif (Op3 = "1001" and Rb3 = Rc2) then
+			i_var := '0';
+            j_var := '1';
+    else 
+    end if ;       
+
+
+
+         	     
+elsif (Op2 = "0100") then
+	
+		load_f_var := '1';
+		if(Op3 = "0000" and Ra3 = Rc2 ) then 
+        	a_var := '1';
+        	b_var := '1';
+        	LS_stall_var := '1';
+          IF_ID_stall_var:= '1';
+          PC_stall_var:= '1';
+          ID_RR_stall_var:= '1';
+			
+   		elsif (Op3 = "0000" and Rb3 = Rc2 ) then
+    		c_var := '1';
+    		d_var := '1';
+    		LS_stall_var := '1';
+        IF_ID_stall_var:= '1';
+          PC_stall_var:= '1';
+          ID_RR_stall_var:= '1';
+    	elsif (Op3 = "0010" and Ra3 = Rc2) then
+    		a_var := '1';
+        	b_var := '1';
+        	LS_stall_var := '1';
+          IF_ID_stall_var:= '1';
+          PC_stall_var:= '1';
+          ID_RR_stall_var:= '1';
+
+    	elsif (Op3 = "0010" and Rb3 = Rc2) then
+    		c_var := '1';
+    		d_var := '1';
+    		LS_stall_var := '1';
+        IF_ID_stall_var:= '1';
+          PC_stall_var:= '1';
+          ID_RR_stall_var:= '1';
+    	elsif (Op3 = "0100" and Rb3 = Rc2) then
+       		a_var := '1';
+        	b_var := '1';
+        	d_var := '1';
+        	LS_stall_var := '1';
+          IF_ID_stall_var:= '1';
+          PC_stall_var:= '1';
+          ID_RR_stall_var:= '1';
+     	elsif (Op3 = "0101" and Ra3 = Rc2) then
+     		h_var := '1'; 
+     		LS_stall_var := '1';
+        IF_ID_stall_var:= '1';
+          PC_stall_var:= '1';
+          ID_RR_stall_var:= '1';
+     	elsif (Op3 = "0101" and Rb3 = Rc2) then
+         	a_var := '1';
+         	b_var := '1';
+         	LS_stall_var := '1';
+          IF_ID_stall_var:= '1';
+          PC_stall_var:= '1';
+          ID_RR_stall_var:= '1';
+    	elsif (Op3 = "1100" and Ra3 = Rc2) then
+          	a_var := '1';
+          	b_var := '1';   	
+          	LS_stall_var := '1';
+            IF_ID_stall_var:= '1';
+          PC_stall_var:= '1';
+          ID_RR_stall_var:= '1';   	    	       	   	    	       	   	    	       	   	    	        	   	    	       	   	    	       	   	    	       	   	    
+    	elsif (Op3 = "1100" and Rb3 = Rc2) then
+			c_var := '1';
+			d_var := '1';
+			LS_stall_var := '1';
+      IF_ID_stall_var:= '1';
+          PC_stall_var:= '1';
+          ID_RR_stall_var:= '1';
+		elsif (Op3 = "1001" and Rb3 = Rc2) then
+			i_var := '0';
+            j_var := '1';
+            LS_stall_var := '1';
+            IF_ID_stall_var:= '1';
+          PC_stall_var:= '1';
+          ID_RR_stall_var:= '1';
+        else 
+        end if;    
+
+	
+end if ;            
+
+
+
+----level2_hazard
+
+if(((Op1 ="0000" or Op1 = "0010") and ((Opr1 = "01" and Cin = '1') or (Opr1 = "10" and Zin = '1') )) or Op1 = "0001" or Op1 = "0011" or Op1 = "1000" or Op1 ="1001" or Op1 = "0100") then
+	if(Op3 = "0000" and Ra3 = Rc1 ) then 
+        a_var := '1';
+        b_var := '0';
+    elsif (Op3 = "0000" and Rb3 = Rc1 ) then
+    	c_var := '1';
+    	d_var := '0';
+    elsif (Op3 = "0010" and Ra3 = Rc1) then
+    	a_var := '1';
+        b_var := '0';
+    elsif (Op3 = "0010" and Rb3 = Rc1) then
+    	c_var := '1';
+    	d_var := '0';
+     elsif (Op3 = "0100" and Rb3 = Rc1) then
+        a_var := '1';
+        b_var := '0';
+        d_var := '1';
+    elsif (Op3 = "0101" and Ra3 = Rc1) then
+     	g_var := '1'; 
+    elsif (Op3 = "0101" and Rb3 = Rc1) then
+         a_var := '1';
+         b_var := '0';
+    elsif (Op3 = "1100" and Ra3 = Rc1) then
+          a_var := '1';
+          b_var := '0';   	   	    	       	   	    	       	   	    	       	   	    	        	   	    	       	   	    	       	   	    	       	   	    
+    elsif (Op3 = "1100" and Rb3 = Rc1) then
+			c_var := '1';
+			d_var := '0';
+	elsif (Op3 = "1001" and Rb3 = Rc1) then
+			i_var := '1';
+            j_var := '0';
+    else 
+    end if;
+
+else
+
+
+end if;
+
+
+
+
+
+a <= a_var;
+  b <= b_var;
+  c <= c_var;
+  d <= d_var;
+  g <= g_var;
+  h <= h_var;
+  i<= i_var;
+  j<= j_var;
+ load_f <=  load_f_var;
+ FL_C <= FL_C_var;
+ IF_ID_stall<= IF_ID_stall_var;
+ PC_stall<= PC_stall_var;
+ ID_RR_stall <= ID_RR_stall_var;
+ LS_stall<= LS_stall_var; 
+ 
+
+
+
+end process;
+
+
+
+
+
+
+
+
+
+
+end hazard_detection_arc;  
+

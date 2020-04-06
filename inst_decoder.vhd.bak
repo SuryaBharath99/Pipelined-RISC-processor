@@ -1,0 +1,24 @@
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity inst_decoder is
+port(
+inst: in std_logic_vector(15 downto 0);
+opcode: out std_logic_vector(3 downto 0);
+ra: out std_logic_vector(2 downto 0);
+rb: out std_logic_vector(2 downto 0);
+rc: out std_logic_vector(2 downto 0);
+cz: out std_logic_vector(1 downto 0);
+imm6: out std_logic_vector(5 downto 0);
+imm9: out std_logic_vector(8 downto 0));
+
+architecture instdec of inst_decoder is
+begin
+opcode<= inst(15 downto 12);
+ra<=inst(11 downto 9);
+rb<=inst(8 downto 6);
+rc<=inst(5 downto 3);
+cz<= inst(1 downto 0);
+imm6<= inst(5 downto 0);
+imm9<= inst(8 downto 0);
+end instdec;

@@ -1,0 +1,161 @@
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity lm_sm is
+port(
+con,en: in std_logic;
+over: out std_logic;
+);
+end entity;
+
+architecture lmsm of lm_sm is
+begin
+process()
+begin
+
+
+
+type FsmState is (
+RST,S0,S1);
+
+signal fsm_state: FsmState;
+signal LASACounterOutput:std_logic_vector(2 downto 0);
+signal LASACountersig:integer:=0;
+begin
+pro : process(clock,reset,Opcode,fsm_state,ALU_Z,LA_Z,ALU_C,InstrCZ)
+variable MemWritevar,DatatoMemvar,IRWritevar,RF_A1var,RF_A2var,RegWritevar,RF_D1var,ALUSrcAvar,PCWritevar,ModifyCvar,ModifyZvar: std_logic;
+variable PCSelectvar,IorDvar,RF_A3var,RF_D3var,ALUSrcBvar,ALUControlvar: std_logic_vector(1 downto 0);
+variable LASACountervar: integer;
+variable LASACounterOutputvar: std_logic_vector(2 downto 0);
+variable next_fsm_state: FsmState;
+
+begin
+PCSelectvar:="00";
+MemWritevar:='1';
+IRWritevar:='0';
+RF_A1var:='0';RF_A2var:='0';
+RegWritevar:='0';
+RF_D1var:='1';
+ALUSrcAvar:='1';ALUSrcBvar:="00";
+PCWritevar:='0';
+ModifyCvar:='0';ModifyZvar:='0';
+IorDvar:="00";
+RF_A3var:="10";
+RF_D3var:="11";
+ALUControlvar:="00";
+next_fsm_state:=fsm_state;
+DatatoMemvar:='1';
+LASACountervar:=LASACountersig;
+case (fsm_state) is
+	when RST =>
+		PCSelectvar:="10";
+		PCWritevar:='1';
+		next_fsm_state:=S0;
+	when S0 =>
+		ALUSrcAvar:='0';ALUSrcBvar:="11";--to update PC
+		PCSelectvar:="00";PCWritevar:='1';
+		IRWritevar:='1';
+		--if (Opcode="0000" or Opcode="0010" or Opcode="0001" or Opcode="1001" or Opcode="0111" or Opcode="0110" or Opcode="0100" or Opcode="0101" or Opcode="1100") then
+		--	next_fsm_state:=S1;
+		if (Opcode="1000") then
+			next_fsm_state:=S7;
+		elsif (Opcode="0011") then
+			RegWritevar := '1'; -- LHI
+	 		RF_D3var:="10";
+	 		RF_A3var:="00";
+	 	elsif (Opcode(3 downto 1)="101" or Opcode="1101" or Opcode(3 downto 1)="111") then
+	 		next_fsm_state:= S0;
+ 		else
+ 			next_fsm_state:=S1;
+		end if;
+	when S1 =>
+		RF_A2var:='1';
+ 		if(Opcode ="0000") then
+ 		  	if(InstrCZ="10" and ALU_C='1') then --ADC
+ 		  		next_fsm_state:=S2;
+ 			elsif (InstrCZ="01" and ALU_Z='1') then
+ 				next_fsm_state:=S2;
+ 			elsif (InstrCZ="00") then
+ 				next_fsm_state:=S2;
+ 			else next_fsm_state:=S0;
+ 			end if;
+ 		elsif (Opcode="0010") then
+ 			if(InstrCZ="10" and ALU_C='1') then
+ 		  		next_fsm_state:=S6;
+ 			elsif (InstrCZ="01" and ALU_Z='1') then
+ 				next_fsm_state:=S6;
+ 			elsif (InstrCZ="00") then
+ 				next_fsm_state:=S6;
+ 			else next_fsm_state:=S0;
+ 			end if;
+ 		elsif (Opcode="0001") then
+ 			next_fsm_state:=S4;
+ 		elsif (Opcode="1001") then -- JLR
+ 			next_fsm_state:=S7;
+ 		elsif (Opcode="0110") then -- Load All
+ 			next_fsm_state:=S9;
+ 			LASACountervar:= 0;
+ 		elsif (Opcode="0111") then -- Store All
+ 			next_fsm_state:=S10;
+ 			ALUSrcBvar:="11";
+ 			LASACountervar:=0;
+ 		elsif (Opcode="0100") then -- Load LW
+ 			RF_A1var:='1';
+ 			next_fsm_state:=S11;
+
+ 		elsif (Opcode="0101") then -- SW
+ 			RF_A1var := '1';
+ 			next_fsm_state:=S11;
+ 		elsif (Opcode="1100") then
+ 			next_fsm_state:=S12;
+ 		--else
+ 		--	next_fsm_state:=S0;
+ 		end if;
+ 	when S2 =>
+ 		RF_D1var:='0';
+ 		ModifyZvar:='1';ModifyCvar:='1';
+ 		next_fsm_state:=S3;
+ 	when S3 =>
+ 		RegWritevar:='1';
+ 		RF_A3var:="10";
+ 		RF_D3var :="11";
+ 		next_fsm_state:=S0;
+ 	
+-- 	when S8 =>
+-- 		RegWritevar := '1';
+-- 		RF_D3var:="10";
+-- 		RF_A3var:="00";
+-- 		next_fsm_state := S0;
+ 	
+	when others =>
+		null;
+end case;
+	DatatoMem <= DatatoMemvar;
+	PCSelect <= PCSelectvar;
+	MemWrite <= MemWritevar;
+	IRWrite <= IRWritevar;
+	RF_A1 <= RF_A1var;
+	RF_A2 <= RF_A2var;
+	RegWrite <= RegWritevar;
+	RF_D1 <= RF_D1var;
+	ALUSrcA <= ALUSrcAvar;
+	ALUSrcB <= ALUSrcBvar;
+	PCWrite <= PCWritevar;
+	IorD <= IorDvar;
+	RF_A3 <= RF_A3var;
+	RF_D3 <= RF_D3var;
+	ALUControl <= ALUControlvar;
+	ModifyC <= ModifyCvar;
+	ModifyZ <= ModifyZvar;
+	LASACounter<=LASACounterOutputvar;
+
+if(rising_edge(clock)) then
+	if(reset='1') then
+	fsm_state<=RST;
+else
+	fsm_state<=next_fsm_state;
+	LASACounterOutput<=LASACounterOutputvar;
+	LASACountersig<=LASACountervar;
+end if;
+end if;
+end process;

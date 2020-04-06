@@ -1,0 +1,57 @@
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity datapath is
+  port (
+	clock,reset: in std_logic
+  ) ;
+end entity ; -- datapath
+
+architecture arch of datapath is
+
+--entity control_unit is
+--  port (
+--	clock,reset: in std_logic;
+--	DatatoMem,MemWrite,IRWrite,RF_A1,RF_A2,RegWrite,RF_D1,ALUSrcA,PCWrite,ModifyC,ModifyZ: out std_logic;
+--	PCSelect,IorD,RF_A3,RF_D3,ALUSrcB,ALUControl: out std_logic_vector(1 downto 0);
+--	Opcode: in std_logic_vector(3 downto 0);
+--	LASACounter: out std_logic_vector(2 downto 0);
+--	InstrCZ: in std_logic_vector(1 downto 0);
+--	ALU_Z,LA_Z,ALU_C,BEQ_Z: in std_logic
+--  ) ;
+--end entity ; -- control_unit
+
+ component reg_n is 
+ generic (n : integer := 16);
+ port (
+ Input: in std_logic_vector(n-1 downto 0);
+ Output: out std_logic_vector(n-1 downto 0);
+ en : in std_logic;
+ clock: in std_logic);
+ end component;
+ 
+component Memory_asyncread_syncwrite is 
+	port (address,Mem_datain: in std_logic_vector(15 downto 0); clk,Mem_wrbar: in std_logic;
+				Mem_dataout: out std_logic_vector(15 downto 0));
+end component;
+
+component regfile is
+  port (
+	clock,enable: in std_logic;
+	A1,A2,A3: in std_logic_vector(2 downto 0);
+	WD3:in std_logic_vector(15 downto 0);
+	RD1,RD2: out std_logic_vector(15 downto 0)
+  ) ;
+end component ;
+
+component ALU is
+  port (
+	A,B: in std_logic_Vector(15 downto 0);
+	ALUControl: in std_logic_Vector(1 downto 0);
+	ModifyC,ModifyZ: in std_logic;
+	--ConC,ConZ: in std_logic;
+	O: out std_logic_Vector(15 downto 0);
+	C,Z,BEQ_Z: out std_logic
+  ) ;
+end component ;
+

@@ -1,0 +1,16 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use IEEE.math_real.all;
+
+entity mux_4 is
+port ( input: in array(3 downto 0) of std_logic_vector(15 downto 0);
+		sel : in std_logic_vector(1 downto 0);
+		output : out std_logic_vector(15 downto 0));
+end entity;
+
+architecture arch of mux_n is
+
+begin
+output <= input(to_integer(unsigned(sel)));
+end arch;
+		
